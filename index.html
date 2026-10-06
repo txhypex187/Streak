@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Streak</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Streak">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+</head>
+<body>
+<style>
+/* Layout: one narrow column, a card per habit, the week as seven tappable days. */
+:root {
+  --bg: #f3f4f7;
+  --card: #ffffff;
+  --fg: #16181d;
+  --muted: #6b7180;
+  --line: #e3e5eb;
+  --day: #eef0f4;
+  --accent: #ff5a1f;
+  --accent-soft: #ffe7dc;
+  --on-accent: #ffffff;
+  --warn: #b77a00;
+  --warn-soft: #fff3d1;
+  --ok: #1f9d55;
+  --font-display: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1013; --card: #191b20; --fg: #f1f2f5; --muted: #8b90a0; --line: #2a2d35;
+    --day: #23262d; --accent: #ff6a33; --accent-soft: #3a2117; --on-accent: #ffffff;
+    --warn: #f0b83a; --warn-soft: #33290f; --ok: #3ccf7f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1013; --card: #191b20; --fg: #f1f2f5; --muted: #8b90a0; --line: #2a2d35;
+  --day: #23262d; --accent: #ff6a33; --accent-soft: #3a2117; --on-accent: #ffffff;
+  --warn: #f0b83a; --warn-soft: #33290f; --ok: #3ccf7f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px;
+  -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 4px 2px 6px; }
+.wk-label { font-size: 13px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; font-weight: 600; }
+.wk-range { font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.1; margin-top: 2px; text-wrap: balance; }
+.countdown { font-size: 13px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.summary { font-size: 14px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.summary b { color: var(--fg); font-weight: 600; }
+
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 14px; transition: box-shadow .4s; }
+.card.won { box-shadow: 0 0 0 2px var(--accent) inset; }
+.card.celebrate { animation: glow 900ms ease-out; }
+@keyframes glow { 0% { box-shadow: 0 0 0 2px var(--accent) inset, 0 0 0 0 var(--accent-soft); } 40% { box-shadow: 0 0 0 2px var(--accent) inset, 0 0 0 10px var(--accent-soft); } 100% { box-shadow: 0 0 0 2px var(--accent) inset, 0 0 0 0 transparent; } }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.name { text-align: left; font-weight: 600; font-size: 18px; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; padding: 2px 0; }
+.meta { font-size: 13px; color: var(--muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-variant-numeric: tabular-nums; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.done { background: var(--accent-soft); color: var(--accent); }
+.chip.lost { background: var(--day); color: var(--muted); }
+
+.streak { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.streak svg { width: 22px; height: 22px; fill: var(--day); transition: fill .3s; }
+.streak.on svg { fill: var(--accent); }
+.streak .num { font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; display: inline-block; }
+.streak .unit { font-size: 12px; color: var(--muted); align-self: flex-end; padding-bottom: 4px; }
+.num.bump { animation: bump 600ms cubic-bezier(.2,1.6,.4,1); color: var(--accent); }
+@keyframes bump { 0% { transform: translateY(0) scale(1); } 35% { transform: translateY(-6px) scale(1.25); } 100% { transform: none; } }
+
+.score { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.total { display: flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.total svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.total .unit { font-weight: 400; font-size: 12px; }
+.total .plus { width: 13px; text-align: center; font-weight: 700; }
+.bonus { color: var(--accent); font-weight: 600; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.day { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; }
+.day .dn { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .03em; }
+.dot { width: 100%; max-width: 46px; aspect-ratio: 1; border-radius: 50%; background: var(--day); display: grid; place-items: center; position: relative; transition: background .18s, transform .18s; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; color: var(--muted); }
+.day.today .dot { box-shadow: 0 0 0 2px var(--fg) inset; color: var(--fg); }
+.day.on .dot { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.day.on .dot .d { opacity: 0; }
+.dot svg { position: absolute; width: 52%; height: 52%; stroke: var(--on-accent); stroke-width: 3.2; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; }
+.day.on .dot svg { stroke-dashoffset: 0; }
+.day.pop .dot { animation: pop 380ms cubic-bezier(.2,1.8,.4,1); }
+.day.pop .dot svg { transition: stroke-dashoffset 280ms ease-out 80ms; }
+@keyframes pop { 0% { transform: scale(.82); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.day:disabled { cursor: default; }
+.day.future .dot { opacity: .45; }
+.day:not(:disabled):active .dot { transform: scale(.9); }
+
+.bar { height: 6px; border-radius: 99px; background: var(--day); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .45s cubic-bezier(.3,1.3,.5,1); }
+
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.histbtn { font-size: 13px; color: var(--muted); padding: 4px 0 4px 8px; }
+.hist { display: flex; flex-direction: column; gap: 8px; }
+.hrow { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+.hw { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.hw .kw { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sq { display: inline-block; width: 100%; max-width: 22px; aspect-ratio: 1; border-radius: 5px; background: var(--day); }
+.sq.ok { background: var(--accent); }
+.sq.warn { background: var(--warn-soft); box-shadow: 0 0 0 1.5px var(--warn) inset; }
+.sq.reset { background: var(--muted); }
+.sq.pause { background: transparent; box-shadow: 0 0 0 1.5px var(--line) inset; }
+.sq.cur { outline: 1.5px solid var(--fg); outline-offset: 1.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend .sq { width: 10px; border-radius: 3px; }
+.pauserow { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-top: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.btn.small { padding: 8px 12px; font-size: 14px; font-weight: 500; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--day); border-radius: 12px; padding: 3px; gap: 3px; }
+.tabs button { padding: 8px 0; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.tabs button[aria-selected=true] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+#statsView { display: flex; flex-direction: column; gap: 14px; }
+#statsView[hidden] { display: none; }
+.day .amt { font-size: 11px; font-weight: 600; color: var(--accent); min-height: 14px; font-variant-numeric: tabular-nums; line-height: 14px; }
+.day.sel .dot { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+.amtform { display: flex; flex-direction: column; gap: 10px; background: var(--day); border-radius: 14px; padding: 12px; }
+.amtform input[type=text] { background: var(--card); }
+.amtrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.amtform .btn { background: var(--card); }
+.amtform .suggest button { background: var(--card); }
+.amtform .btn.remove { background: transparent; box-shadow: 0 0 0 1.5px var(--line) inset; color: #d23a2a; }
+.amtform .btn.primary { background: var(--accent); }
+.linkbtn { font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
+.figs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fig b { font-family: var(--font-display); font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.fig span { font-size: 12px; color: var(--fg); }
+.fig small { font-size: 11px; color: var(--muted); }
+.sub { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.leg { text-transform: none; letter-spacing: 0; font-weight: 400; display: inline-flex; align-items: center; gap: 4px; }
+.tline-l { display: inline-block; width: 12px; border-top: 1.5px dashed var(--muted); }
+.bars { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; align-items: end; }
+.bcol { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.bval { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 14px; white-space: nowrap; }
+.btrack { position: relative; width: 100%; max-width: 26px; height: 80px; background: var(--day); border-radius: 6px; overflow: hidden; display: flex; align-items: flex-end; }
+.bfill { display: block; width: 100%; background: var(--muted); opacity: .55; border-radius: 6px 6px 0 0; }
+.bfill.met, .bars:not(:has(.tline)) .bfill { background: var(--accent); opacity: 1; }
+.bcol.cur .bfill { opacity: .5; }
+.tline { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--fg); opacity: .5; z-index: 1; }
+.bkw { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.wds { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.wd { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.wtrack { width: 100%; max-width: 26px; height: 44px; background: var(--day); border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
+.wtrack i { display: block; width: 100%; background: var(--fg); opacity: .7; border-radius: 6px 6px 0 0; }
+.wd span { font-size: 11px; color: var(--muted); font-weight: 600; }
+.units { display: flex; flex-direction: column; gap: 10px; }
+.urow { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.urow b { font-size: 16px; color: var(--fg); font-weight: 600; }
+.notes { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.notes p { margin: 0; font-size: 13px; line-height: 1.45; }
+.hint { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.hint.warn { color: var(--warn); }
+
+/* Forms */
+.panel { background: var(--card); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.panel h2 { font-family: var(--font-display); font-weight: 800; font-size: 20px; margin: 0; }
+label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+input[type=text], textarea { font: inherit; font-size: 16px; color: var(--fg); background: var(--day); border: 0; border-radius: 12px; padding: 12px 14px; width: 100%; }
+textarea { min-height: 110px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; resize: vertical; }
+.stepper { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.stepper button { background: var(--day); border-radius: 12px; padding: 10px 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stepper button[aria-pressed=true] { background: var(--fg); color: var(--bg); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { background: var(--day); border-radius: 12px; padding: 11px 16px; font-weight: 600; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.danger { color: #d23a2a; }
+.btn.grow { flex: 1; }
+.add { border: 2px dashed var(--line); border-radius: var(--radius); padding: 16px; font-weight: 600; color: var(--muted); }
+.suggest { display: flex; gap: 8px; flex-wrap: wrap; }
+.suggest button { background: var(--day); border-radius: 99px; padding: 7px 12px; font-size: 14px; }
+.empty p { margin: 0; color: var(--muted); line-height: 1.45; }
+
+footer { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.links button { font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.store { text-align: center; font-size: 12px; color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; max-width: calc(100% - 32px); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabWeek" data-view="week" aria-selected="true">Woche</button>
+    <button role="tab" id="tabStats" data-view="stats" aria-selected="false">Statistik</button>
+  </nav>
+  <div id="weekView" style="display:flex;flex-direction:column;gap:14px">
+  <header>
+    <div>
+      <div class="wk-label" id="wkLabel">Diese Woche</div>
+      <div class="wk-range" id="wkRange"></div>
+      <div class="countdown" id="countdown"></div>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <main id="list" style="display:flex;flex-direction:column;gap:14px"></main>
+
+  <div id="formSlot"></div>
+  <button class="add" id="addBtn">+ Neues Ziel</button>
+  </div>
+  <div id="statsView" hidden></div>
+
+  <footer>
+    <div class="links">
+      <button id="exportBtn">Backup speichern</button>
+      <button id="importBtn">Backup laden</button>
+    </div>
+    <div id="backupSlot"></div>
+    <div class="store" id="storeState">Lädt…</div>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+
+<script>
+/* ---------- Logik (pur, testbar) ---------- */
+// Ein Tag endet erst um 3 Uhr nachts: bis dahin zählt noch der Vortag.
+const GRACE_HOURS = 3;
+const appNow = () => new Date(Date.now() - GRACE_HOURS * 3600e3);
+const DAYNAMES = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const parseYmd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; };
+const dayIdx = d => (d.getDay() + 6) % 7; // Mo=0 … So=6
+const mondayOf = d => addDays(d, -dayIdx(d));
+const weekKey = d => ymd(mondayOf(d));
+const nextWeek = k => ymd(addDays(parseYmd(k), 7));
+const popcount = m => { let c = 0; while (m) { c += m & 1; m >>= 1; } return c; };
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 864e5 + 1) / 7);
+}
+function targetFor(h, wk) {
+  let t = null, best = "";
+  for (const k in h.targets) if (k <= wk && k >= best) { best = k; t = h.targets[k]; }
+  return t ?? h.targets[h.startWeek] ?? 1;
+}
+
+/* Regeln:
+   - Ziel der Woche erreicht -> Streak +1, Verwarnung weg.
+   - Verpasst ohne Verwarnung -> Verwarnung, Streak bleibt stehen.
+   - Verpasst mit Verwarnung -> Reset auf 0.
+   - Die Verwarnung verschwindet mit dem ersten Eintrag nach der verpassten Woche.
+   - Die Woche, in der ein Ziel angelegt wurde, zählt nur, wenn sie geschafft wird. */
+function derive(h, today) {
+  const cur = weekKey(today);
+  const paused = h.paused || {};
+  let streak = 0, best = 0, warned = false, resets = 0;
+  const history = [];
+  for (let wk = h.startWeek; wk < cur; wk = nextWeek(wk)) {
+    const c = popcount(h.weeks[wk] || 0), t = targetFor(h, wk);
+    const wasWarned = warned, sBefore = streak;
+    let st;
+    if (c >= 1) warned = false;
+    if (c >= t) { streak++; if (streak > best) best = streak; st = "ok"; }
+    else if (paused[wk]) st = "pause";           // Pause: weder Verwarnung noch Reset
+    else if (wk === h.startWeek) st = "start";   // Startwoche: kein Malus
+    else if (wasWarned && c === 0) { streak = 0; warned = false; resets++; st = "reset"; }
+    else { warned = true; st = "warn"; }
+    history.push({ wk, st, c, t, sBefore });
+  }
+  const mask = h.weeks[cur] || 0, count = popcount(mask), target = targetFor(h, cur);
+  const met = count >= target;
+  const warnedNow = warned && count === 0;
+  let openDays = 0;
+  for (let i = dayIdx(today); i < 7; i++) if (!(mask & (1 << i))) openDays++;
+  const reachable = met || (target - count) <= openDays;
+  let total = 0, bonusTotal = 0;
+  for (const k in h.weeks) { const c = popcount(h.weeks[k]); total += c; if (k >= h.startWeek) bonusTotal += Math.max(0, c - targetFor(h, k)); }
+  const bonus = Math.max(0, count - target); // Einträge über dem Minimum diese Woche
+  const shown = streak + (met ? 1 : 0);
+  const pausedNow = !!paused[cur];
+  history.push({ wk: cur, st: met ? "ok" : pausedNow ? "pause" : "open", c: count, t: target, current: true });
+  return { streak: shown, past: streak, best: Math.max(best, shown), warned: warnedNow, carriedWarn: warned, count, target, met, reachable, total, bonus, bonusTotal, resets, mask, paused: pausedNow, history };
+}
+function toggleDay(h, dateStr, today) {
+  const d = parseYmd(dateStr);
+  if (weekKey(d) !== weekKey(today) || dateStr > ymd(today)) return false;
+  const wk = weekKey(d), bit = 1 << dayIdx(d);
+  const m = (h.weeks[wk] || 0) ^ bit;
+  if (m) h.weeks[wk] = m; else delete h.weeks[wk];
+  if (!(m & bit)) setAmount(h, dateStr, null);
+  return true;
+}
+
+/* Mengen: h.units = ["Seiten"] oder ["Minuten", "km"]; h.amt[woche] = 7 Plätze, je null oder [Zahl, Zahl]. */
+function getAmount(h, dateStr) {
+  const d = parseYmd(dateStr), row = h.amt && h.amt[weekKey(d)];
+  return row ? row[dayIdx(d)] || null : null;
+}
+function setAmount(h, dateStr, vals) {
+  const d = parseYmd(dateStr), wk = weekKey(d), i = dayIdx(d);
+  const clean = Array.isArray(vals) && vals.some(v => v != null) ? vals.map(v => v == null ? null : v) : null;
+  h.amt = { ...(h.amt || {}) };
+  const row = (h.amt[wk] || [null, null, null, null, null, null, null]).slice();
+  row[i] = clean;
+  if (row.every(x => x == null)) delete h.amt[wk]; else h.amt[wk] = row;
+}
+function parseAmount(str) {
+  const n = parseFloat(String(str).replace(",", ".").trim());
+  return Number.isFinite(n) && n > 0 && n < 1e6 ? Math.round(n * 100) / 100 : null;
+}
+
+/* Statistik für ein Ziel. */
+function stats(h, today) {
+  const d = derive(h, today);
+  const past = d.history.filter(x => !x.current);
+  const counted = past.filter(x => x.st === "ok" || x.st === "warn" || x.st === "reset");
+  const okWeeks = counted.filter(x => x.st === "ok").length;
+  const avgDays = past.length ? past.reduce((a, x) => a + x.c, 0) / past.length : null;
+  const avgTarget = past.length ? past.reduce((a, x) => a + x.t, 0) / past.length : d.target;
+  const weekday = [0, 0, 0, 0, 0, 0, 0];
+  for (const k in h.weeks) { const m = h.weeks[k]; for (let i = 0; i < 7; i++) if (m & (1 << i)) weekday[i]++; }
+  const units = (h.units || []).filter(Boolean);
+  const weekSum = (wk, u) => { const row = h.amt && h.amt[wk]; return row ? row.reduce((a, x) => a + (x && x[u] ? x[u] : 0), 0) : 0; };
+  const last8 = d.history.slice(-8).map(x => ({ wk: x.wk, c: x.c, t: x.t, current: !!x.current, sums: units.map((_, u) => weekSum(x.wk, u)) }));
+  const unitStats = units.map((name, u) => {
+    let total = 0, n = 0, rec = null;
+    for (const wk in (h.amt || {})) h.amt[wk].forEach((x, i) => {
+      if (x && x[u]) { total += x[u]; n++; if (!rec || x[u] > rec.v) rec = { v: x[u], date: ymd(addDays(parseYmd(wk), i)) }; }
+    });
+    const pastSums = past.map(x => weekSum(x.wk, u)).filter(v => v > 0);
+    const avgWeek = pastSums.length ? pastSums.reduce((a, b) => a + b, 0) / pastSums.length : null;
+    return { name, total, n, avg: n ? total / n : null, rec, thisWeek: weekSum(d.history[d.history.length - 1].wk, u), avgWeek };
+  });
+  let trend = null;
+  if (past.length >= 8) {
+    const val = x => units.length ? weekSum(x.wk, 0) : x.c;
+    const a = past.slice(-4).reduce((s, x) => s + val(x), 0) / 4, b = past.slice(-8, -4).reduce((s, x) => s + val(x), 0) / 4;
+    trend = { now: a, before: b, pct: b ? (a - b) / b * 100 : null };
+  }
+  const warnsAt = past.filter(x => x.st === "warn" || x.st === "reset").map(x => x.sBefore).sort((a, b) => a - b);
+  const tipping = warnsAt.length >= 2 ? warnsAt[Math.floor(warnsAt.length / 2)] : null;
+  return { d, pastWeeks: past.length, counted: counted.length, okWeeks, avgDays, avgTarget, weekday, units, last8, unitStats, trend, tipping };
+}
+function validState(s) {
+  if (!s || typeof s !== "object" || !Array.isArray(s.habits)) return false;
+  return s.habits.every(h => h && typeof h.id === "string" && typeof h.name === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(h.startWeek) && h.targets && typeof h.targets === "object" && h.weeks && typeof h.weeks === "object");
+}
+/* ---------- Ende Logik ---------- */
+
+const $ = id => document.getElementById(id);
+const LS_KEY = "streak-state-v1";
+let state = { v: 1, habits: [], updatedAt: 0 };
+let editing = null;      // id des Ziels im Bearbeiten-Modus, "new" für neues Ziel
+let formTarget = 3;
+let lastStreaks = {};    // für die Zähl-Animation
+let view = "week";        // "week" oder "stats"
+let amtOpen = null;       // {id, date}: offenes Mengenfeld
+let formUnits = ["", ""];
+const nf = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
+const fmt = v => nf.format(v);
+
+function lsRead() { try { const s = JSON.parse(localStorage.getItem(LS_KEY)); return validState(s) ? s : null; } catch { return null; } }
+function lsWrite() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch {} }
+
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.tm); toast.tm = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+const FLAME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.2c.4 3-1.2 4.6-2.7 6.2C8.4 10 7 11.6 7 14.3 7 17.5 9.3 20 12 20s5-2.3 5-5.6c0-1.8-.7-3.2-1.5-4.3-.2 1.3-.9 2.3-2 2.8.5-3.6-.3-7.4-.9-10.7zM12 22c-4.1 0-7-3.3-7-7.6 0-3.6 1.9-5.8 3.5-7.5.4 1.7 1.2 2.6 2 3.1C10.9 7 11 4.1 10.2 1c4.7 1.9 9.8 6.7 9.8 13.2C20 18.6 16.4 22 12 22z"/></svg>';
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function render(opts = {}) {
+  const today = appNow(), mon = mondayOf(today), sun = addDays(mon, 6);
+  $("tabWeek").setAttribute("aria-selected", String(view === "week"));
+  $("tabStats").setAttribute("aria-selected", String(view === "stats"));
+  $("weekView").hidden = view !== "week";
+  $("statsView").hidden = view !== "stats";
+  if (view === "stats") { $("statsView").innerHTML = statsHtml(today); return; }
+  $("wkLabel").textContent = "KW " + isoWeek(today);
+  $("wkRange").textContent = mon.getMonth() === sun.getMonth()
+    ? `${mon.getDate()}.–${sun.getDate()}. ${MONTHS[sun.getMonth()]}`
+    : `${mon.getDate()}. ${MONTHS[mon.getMonth()].slice(0,3)} – ${sun.getDate()}. ${MONTHS[sun.getMonth()].slice(0,3)}`;
+
+  const list = $("list");
+  const derived = state.habits.map(h => [h, derive(h, today)]);
+  const done = derived.filter(([, d]) => d.met).length;
+  $("summary").innerHTML = state.habits.length ? `<b>${done} von ${state.habits.length}</b><br>geschafft` : "";
+
+  if (!state.habits.length && editing !== "new") {
+    list.innerHTML = `<div class="panel empty">
+      <h2>Was nimmst du dir vor?</h2>
+      <p>Lege ein Ziel an und sag, wie oft pro Woche du es mindestens schaffen willst. Jede geschaffte Woche verlängert die Streak.</p>
+      <div class="suggest">
+        <button data-suggest="Lesen|7">Lesen · 7×</button>
+        <button data-suggest="Sport|2">Sport · 2×</button>
+        <button data-suggest="Meditieren|5">Meditieren · 5×</button>
+      </div></div>`;
+  } else {
+    list.innerHTML = derived.map(([h, d]) => editing === h.id ? formHtml(h) : cardHtml(h, d, today, mon)).join("");
+  }
+  $("formSlot").innerHTML = editing === "new" ? formHtml(null) : "";
+  $("addBtn").hidden = editing === "new";
+
+  // Animationen nach dem Rendern
+  for (const [h, d] of derived) {
+    const card = list.querySelector(`[data-card="${h.id}"]`);
+    if (!card) continue;
+    if (opts.popDay && opts.popDay.id === h.id) {
+      const el = card.querySelector(`[data-day="${opts.popDay.date}"]`);
+      if (el && el.classList.contains("on")) el.classList.add("pop");
+    }
+    if (lastStreaks[h.id] !== undefined && d.streak > lastStreaks[h.id]) {
+      card.querySelector(".num").classList.add("bump");
+      card.classList.add("celebrate");
+    }
+    lastStreaks[h.id] = d.streak;
+  }
+  if (opts.focusAmt) { const el = $("amt0"); if (el) el.focus({ preventScroll: true }); }
+  if (opts.focus) { const el = document.getElementById(opts.focus); if (el) el.focus(); }
+}
+
+function cardHtml(h, d, today, mon) {
+  const tStr = ymd(today);
+  const units = (h.units || []).filter(Boolean);
+  let days = "";
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(mon, i), ds = ymd(day), on = !!(d.mask & (1 << i)), future = ds > tStr;
+    const a = units.length && on ? getAmount(h, ds) : null;
+    const sel = amtOpen && amtOpen.id === h.id && amtOpen.date === ds;
+    days += `<button class="day${on ? " on" : ""}${ds === tStr ? " today" : ""}${future ? " future" : ""}${sel ? " sel" : ""}" data-day="${ds}" data-h="${h.id}" ${future ? "disabled" : ""} aria-pressed="${on}" aria-label="${DAYNAMES[i]} ${day.getDate()}.">
+      <span class="dn">${DAYNAMES[i]}</span><span class="dot"><span class="d">${day.getDate()}</span>${CHECK}</span>${units.length ? `<span class="amt">${a && a[0] != null ? fmt(a[0]) : ""}</span>` : ""}</button>`;
+  }
+  let editor = "";
+  if (amtOpen && amtOpen.id === h.id) {
+    const cur = getAmount(h, amtOpen.date) || [];
+    const dd = parseYmd(amtOpen.date);
+    const fields = units.length
+      ? `<div class="amtrow">${units.map((u, k) => `<label class="f" for="amt${k}">${esc(u)}<input type="text" inputmode="decimal" id="amt${k}" value="${cur[k] != null ? String(cur[k]).replace(".", ",") : ""}" placeholder="0" autocomplete="off"></label>`).join("")}</div>`
+      : `<div class="hint">Wie viel? Die Einheit merkt sich die App für dieses Ziel.</div>
+        <div class="amtrow"><label class="f" for="amt0">Menge<input type="text" inputmode="decimal" id="amt0" placeholder="z. B. 30" autocomplete="off"></label>
+        <label class="f" for="amtU0">Einheit<input type="text" id="amtU0" maxlength="20" placeholder="z. B. Seiten" autocomplete="off"></label></div>
+        <div class="suggest">${["Seiten", "Minuten", "km"].map(u => `<button type="button" data-aunit="${u}">${u}</button>`).join("")}</div>
+        <button type="button" class="linkbtn" data-amt2>+ zweiter Wert, z. B. km beim Laufen</button>
+        <div class="amtrow" id="amtRow2" hidden><label class="f" for="amt1">Menge<input type="text" inputmode="decimal" id="amt1" placeholder="z. B. 5" autocomplete="off"></label>
+        <label class="f" for="amtU1">Einheit<input type="text" id="amtU1" maxlength="20" placeholder="z. B. km" autocomplete="off"></label></div>`;
+    editor = `<form class="amtform" data-amt="${h.id}">
+      ${fields}
+      <div class="row"><button type="submit" class="btn primary grow">Speichern</button><button type="button" class="btn" data-amtclose>${amtOpen.fresh ? "Nur abhaken" : "Schließen"}</button></div>
+      <button type="button" class="btn remove" data-amtremove="${h.id}">${DAYNAMES[dayIdx(dd)]} ${dd.getDate()}. wieder entfernen</button>
+    </form>`;
+  }
+  let chip = "", hint = "";
+  if (d.met) chip = `<span class="chip done">Woche geschafft</span>`;
+  else if (d.paused) chip = `<span class="chip lost">Pausiert</span>`;
+  else if (d.warned) { chip = `<span class="chip warn">Verwarnt</span>`; hint = `<div class="hint warn">Letzte Woche verpasst. Ein Eintrag hebt die Verwarnung auf, eine weitere Woche ohne Eintrag setzt die Streak zurück.</div>`; }
+  else if (!d.reachable) chip = `<span class="chip lost">Diese Woche nicht mehr schaffbar</span>`;
+  const need = Math.max(0, d.target - d.count);
+  const pct = Math.min(100, d.count / d.target * 100);
+  return `<section class="card${d.met ? " won" : ""}" data-card="${h.id}">
+    <div class="top">
+      <div style="min-width:0">
+        <button class="name" data-edit="${h.id}" aria-label="${esc(h.name)} bearbeiten">${esc(h.name)}</button>
+        <div class="meta"><span>${d.count} von ${d.target}${need && !d.met ? ` · noch ${need}` : ""}${d.bonus ? ` · <b class="bonus">+${d.bonus} Bonus</b>` : ""}</span>${chip}</div>
+      </div>
+      <div class="score">
+        <div class="streak${d.streak > 0 ? " on" : ""}" title="Bestwert: ${d.best} Wochen">${FLAME}<span class="num">${d.streak}</span><span class="unit">${d.streak === 1 ? "Woche" : "Wochen"}</span></div>
+        <div class="total" aria-label="${d.total} Einträge insgesamt">${TICK}<span>${d.total}</span><span class="unit">${d.total === 1 ? "Eintrag" : "Einträge"}</span></div>
+        ${d.bonusTotal ? `<div class="total" aria-label="${d.bonusTotal} Bonus insgesamt"><span class="plus">+</span><span>${d.bonusTotal}</span><span class="unit">Bonus</span></div>` : ""}
+      </div>
+    </div>
+    <div class="days">${days}</div>
+    ${editor}
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    ${hint}
+    <div class="meta" style="margin:0"><span>Bestwert ${d.best} ${d.best === 1 ? "Woche" : "Wochen"}</span></div>
+  </section>`;
+}
+
+/* ---------- Statistik ---------- */
+const DAYLONG = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+const shortDate = ds => { const d = parseYmd(ds); return `${DAYNAMES[dayIdx(d)]} ${d.getDate()}. ${MONTHS[d.getMonth()].slice(0, 3)}`; };
+function statsHtml(today) {
+  if (!state.habits.length) return `<div class="panel empty"><h2>Statistik</h2><p>Lege zuerst ein Ziel an. Hier siehst du dann, wie es läuft.</p></div>`;
+  const cards = state.habits.map(h => statCard(h, stats(h, today))).join("");
+  return `<header><div><div class="wk-label">Seit Beginn</div><div class="wk-range">Statistik</div></div></header>${cards}`;
+}
+function statCard(h, st) {
+  const d = st.d;
+  const quote = st.counted ? `${st.okWeeks} von ${st.counted}` : "–";
+  const quotePct = st.counted ? `${Math.round(st.okWeeks / st.counted * 100)} %` : "noch keine fertige Woche";
+  const avg = st.avgDays != null ? fmt(st.avgDays) : "–";
+  const figs = `<div class="figs">
+    <div class="fig"><b>${quote}</b><span>Wochen geschafft</span><small>${quotePct}</small></div>
+    <div class="fig"><b>${avg}</b><span>Tage pro Woche</span><small>Ziel ${fmt(st.avgTarget)}</small></div>
+    <div class="fig"><b>${d.best}</b><span>beste Streak</span><small>${d.total} Einträge${d.bonusTotal ? `, +${d.bonusTotal} Bonus` : ""}</small></div>
+  </div>`;
+
+  // Balken: letzte 8 Wochen (Menge der 1. Einheit, sonst Tage)
+  const useUnit = st.units.length > 0;
+  const vals = st.last8.map(x => useUnit ? x.sums[0] : x.c);
+  const max = Math.max(1, ...vals, ...(useUnit ? [] : st.last8.map(x => x.t))) * 1.12;
+  const bars = st.last8.map((x, i) => {
+    const v = vals[i], hgt = Math.round(v / max * 100);
+    const tl = useUnit ? "" : `<i class="tline" style="bottom:${Math.round(x.t / max * 100)}%"></i>`;
+    return `<div class="bcol${x.current ? " cur" : ""}"><span class="bval">${v ? fmt(v) : ""}</span>
+      <div class="btrack">${tl}<i class="bfill${!useUnit && x.c >= x.t ? " met" : ""}" style="height:${hgt}%"></i></div>
+      <span class="bkw">${x.current ? "jetzt" : "KW " + isoWeek(parseYmd(x.wk))}</span></div>`;
+  }).join("");
+  const chart = `<div class="sub">${useUnit ? esc(st.units[0]) + " pro Woche" : "Tage pro Woche"}${useUnit ? "" : ` <span class="leg"><i class="tline-l"></i>Ziel</span>`}</div><div class="bars">${bars}</div>`;
+
+  // Wochentage
+  const wmax = Math.max(1, ...st.weekday), wsum = st.weekday.reduce((a, b) => a + b, 0);
+  const wd = st.weekday.map((v, i) => `<div class="wd"><div class="wtrack"><i style="height:${Math.round(v / wmax * 100)}%"></i></div><span>${DAYNAMES[i]}</span></div>`).join("");
+  let wdText = "";
+  if (wsum >= 6) {
+    const hi = st.weekday.indexOf(Math.max(...st.weekday)), lo = st.weekday.indexOf(Math.min(...st.weekday));
+    if (st.weekday[hi] !== st.weekday[lo]) wdText = `<div class="hint">Am häufigsten am ${DAYLONG[hi]}, am seltensten am ${DAYLONG[lo]}.</div>`;
+  }
+  const weekdays = `<div class="sub">Wochentage</div><div class="wds">${wd}</div>${wdText}`;
+
+  // Mengen
+  const unitRows = st.unitStats.map(u => {
+    if (!u.n) return `<div class="urow"><b>${esc(u.name)}</b><span class="hint">Noch keine Zahlen eingetragen. Tipp einen abgehakten Tag an, um eine einzutragen.</span></div>`;
+    let cmp = "";
+    cmp = `Diese Woche bisher ${fmt(u.thisWeek)}${u.avgWeek ? ` · Schnitt pro Woche ${fmt(u.avgWeek)}` : ""}`;
+    return `<div class="urow"><b>${fmt(u.total)} ${esc(u.name)}</b><span>Ø ${fmt(u.avg)} pro Eintrag · Rekord ${fmt(u.rec.v)} am ${shortDate(u.rec.date)}</span><span>${cmp}</span></div>`;
+  }).join("");
+
+  // Erkenntnisse
+  const notes = [];
+  if (st.trend && st.trend.pct != null && Math.abs(st.trend.pct) >= 5)
+    notes.push(`Letzte 4 Wochen ${st.trend.pct > 0 ? "↑" : "↓"} ${Math.abs(Math.round(st.trend.pct))} % gegenüber den 4 davor.`);
+  else if (st.trend) notes.push("Letzte 4 Wochen etwa gleich wie die 4 davor.");
+  if (st.avgDays != null && st.pastWeeks >= 4) {
+    if (st.avgDays >= st.avgTarget + 1) notes.push("Du liegst klar über deinem Minimum. Ein höheres Ziel wäre machbar.");
+    else if (st.avgDays < st.avgTarget - 0.5) notes.push("Du liegst im Schnitt unter deinem Minimum. Ein kleineres Ziel könnte die Streak retten.");
+  }
+  if (st.tipping != null) notes.push(`Verwarnungen kamen bisher meist nach ${st.tipping} ${st.tipping === 1 ? "Woche" : "Wochen"} Streak.`);
+  if (st.pastWeeks < 6) notes.push(`Noch wenig Daten (${st.pastWeeks} ${st.pastWeeks === 1 ? "fertige Woche" : "fertige Wochen"}). Aussagekräftig wird es nach 6 bis 8 Wochen.`);
+
+  return `<section class="card">
+    <div class="top"><div class="name" style="padding:0">${esc(h.name)}</div>
+      <div class="streak${d.streak > 0 ? " on" : ""}">${FLAME}<span class="num" style="font-size:24px">${d.streak}</span></div></div>
+    ${figs}
+    ${unitRows ? `<div class="units">${unitRows}</div>` : ""}
+    ${chart}
+    ${weekdays}
+    ${notes.length ? `<div class="notes">${notes.map(n => `<p>${n}</p>`).join("")}</div>` : ""}
+  </section>`;
+}
+
+const ST_LABEL = { ok: "geschafft", warn: "verpasst, verwarnt", reset: "zurückgesetzt", pause: "pausiert", start: "Startwoche", open: "läuft" };
+function histHtml(hist) {
+  const last = hist.slice(-12);
+  const cells = last.map(x => {
+    const kw = isoWeek(parseYmd(x.wk));
+    return `<div class="hw"><span class="sq ${x.st}${x.current ? " cur" : ""}" title="KW ${kw}: ${ST_LABEL[x.st]} (${x.c}/${x.t})"></span><span class="kw">${kw}</span></div>`;
+  }).join("");
+  const used = new Set(last.map(x => x.st));
+  const legend = ["ok", "warn", "reset", "pause"].filter(s => used.has(s))
+    .map(s => `<span><i class="sq ${s}"></i>${ST_LABEL[s]}</span>`).join("");
+  return `<div class="hist"><div class="hrow">${cells}</div>${legend ? `<div class="legend">${legend}</div>` : ""}
+    ${last.length < 2 ? `<div class="hint">Der Verlauf füllt sich mit jeder abgeschlossenen Woche.</div>` : ""}</div>`;
+}
+
+function formHtml(h) {
+  const isNew = !h;
+  const sel = formTarget;
+  let steps = "";
+  for (let i = 1; i <= 7; i++) steps += `<button type="button" data-target="${i}" aria-pressed="${i === sel}">${i}×</button>`;
+  return `<form class="panel" id="habitForm" data-id="${isNew ? "new" : h.id}">
+    <h2>${isNew ? "Neues Ziel" : "Ziel bearbeiten"}</h2>
+    <label class="f" for="fName">Was?<input type="text" id="fName" maxlength="60" placeholder="z. B. Buch lesen" value="${isNew ? "" : esc(h.name)}" autocomplete="off"></label>
+    <div class="f" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600">Mindestens pro Woche<div class="stepper">${steps}</div></div>
+    <div class="f" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600">Menge mitschreiben (optional)
+      <div class="amtrow"><input type="text" id="fUnit0" maxlength="20" placeholder="z. B. Seiten" value="${esc(formUnits[0] || "")}" autocomplete="off" aria-label="Einheit">
+      <input type="text" id="fUnit1" maxlength="20" placeholder="2. Einheit, z. B. km" value="${esc(formUnits[1] || "")}" autocomplete="off" aria-label="Zweite Einheit"></div>
+      <div class="suggest">${["Seiten", "Minuten", "km"].map(u => `<button type="button" data-unit="${u}">${u}</button>`).join("")}</div></div>
+    ${isNew ? "" : `<div class="hint">Eine neue Anzahl gilt ab dieser Woche. Vergangene Wochen bleiben, wie sie waren.</div>`}
+    ${isNew ? "" : (() => { const p = !!(h.paused && h.paused[weekKey(appNow())]); return `<div class="pauserow">
+      <button type="button" class="btn small" data-pause="${h.id}">${p ? "Pause beenden" : "Diese Woche pausieren"}</button>
+      <span class="hint">Eine pausierte Woche zählt nicht als verpasst. Schaffst du das Ziel trotzdem, zählt sie normal.</span></div>`; })()}
+    <div class="row">
+      <button type="submit" class="btn primary grow">${isNew ? "Anlegen" : "Speichern"}</button>
+      <button type="button" class="btn" data-cancel>Abbrechen</button>
+    </div>
+    ${isNew ? "" : `<div class="row" id="delRow"><button type="button" class="btn danger" data-del="${h.id}">Ziel löschen</button></div>`}
+  </form>`;
+}
+
+/* ---------- Haptik ----------
+   iPhone (iOS 18+): Safari kennt keine Vibrations-API, aber das Umschalten eines
+   <input switch> löst einen kurzen Haptik-Tick aus. Android: navigator.vibrate. */
+const hapticLabel = (() => {
+  const l = document.createElement("label");
+  l.setAttribute("aria-hidden", "true");
+  l.style.cssText = "position:fixed;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";
+  const i = document.createElement("input");
+  i.type = "checkbox"; i.setAttribute("switch", ""); i.tabIndex = -1;
+  l.appendChild(i); document.body.appendChild(l);
+  return l;
+})();
+function haptic() {
+  try {
+    if (navigator.vibrate) navigator.vibrate(12);
+    else hapticLabel.click();
+  } catch (_) {}
+}
+
+/* ---------- Interaktion ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  haptic();
+  const today = appNow();
+  if (t.dataset.view) {
+    view = t.dataset.view; editing = null; amtOpen = null; render(); window.scrollTo(0, 0);
+  } else if (t.dataset.day) {
+    const h = state.habits.find(x => x.id === t.dataset.h);
+    if (!h) return;
+    const on = !!((h.weeks[weekKey(parseYmd(t.dataset.day))] || 0) & (1 << dayIdx(parseYmd(t.dataset.day))));
+    if (on) {
+      // Abgehakter Tag: Mengenfeld öffnen statt Häkchen entfernen
+      amtOpen = amtOpen && amtOpen.id === h.id && amtOpen.date === t.dataset.day ? null : { id: h.id, date: t.dataset.day };
+      render({ focusAmt: !!amtOpen });
+    } else if (toggleDay(h, t.dataset.day, today)) {
+      amtOpen = { id: h.id, date: t.dataset.day, fresh: true };
+      commit(); render({ popDay: { id: h.id, date: t.dataset.day }, focusAmt: true });
+    }
+  } else if (t.dataset.aunit) {
+    const a = $("amtU0"), b = $("amtU1");
+    if (!a.value.trim() || $("amtRow2").hidden) a.value = t.dataset.aunit; else b.value = t.dataset.aunit;
+  } else if (t.dataset.amt2 !== undefined) {
+    $("amtRow2").hidden = false; t.hidden = true; $("amt1").focus();
+  } else if (t.dataset.amtclose !== undefined) {
+    amtOpen = null; render();
+  } else if (t.dataset.amtremove) {
+    const h = state.habits.find(x => x.id === t.dataset.amtremove);
+    if (h && amtOpen && toggleDay(h, amtOpen.date, today)) { amtOpen = null; commit(); render(); }
+  } else if (t.dataset.unit) {
+    const a = $("fUnit0"), b = $("fUnit1");
+    if (!a.value.trim()) a.value = t.dataset.unit; else if (!b.value.trim() && a.value.trim() !== t.dataset.unit) b.value = t.dataset.unit;
+  } else if (t.dataset.edit) {
+    const h = state.habits.find(x => x.id === t.dataset.edit);
+    editing = h.id; amtOpen = null; formTarget = targetFor(h, weekKey(today));
+    formUnits = [(h.units || [])[0] || "", (h.units || [])[1] || ""]; render({ focus: "fName" });
+  } else if (t.dataset.hist) {
+    const id = t.dataset.hist;
+    if (openHist.has(id)) openHist.delete(id); else openHist.add(id);
+    render();
+  } else if (t.dataset.pause) {
+    const h = state.habits.find(x => x.id === t.dataset.pause);
+    const wk = weekKey(today);
+    h.paused = { ...(h.paused || {}) };
+    if (h.paused[wk]) delete h.paused[wk]; else h.paused[wk] = true;
+    const on = !!h.paused[wk];
+    commit(); editing = null; render(); toast(on ? "Diese Woche pausiert" : "Pause beendet");
+  } else if (t.dataset.target) {
+    formTarget = +t.dataset.target;
+    t.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === t)));
+  } else if (t.dataset.cancel !== undefined) {
+    editing = null; render();
+  } else if (t.dataset.del) {
+    $("delRow").innerHTML = `<span class="hint" style="flex-basis:100%">Wirklich löschen? Streak und alle Einträge sind dann weg.</span>
+      <button type="button" class="btn danger" data-delok="${t.dataset.del}">Ja, löschen</button><button type="button" class="btn" data-cancel>Nein</button>`;
+  } else if (t.dataset.delok) {
+    state.habits = state.habits.filter(x => x.id !== t.dataset.delok);
+    editing = null; commit(); render(); toast("Gelöscht");
+  } else if (t.dataset.suggest) {
+    const [n, c] = t.dataset.suggest.split("|");
+    editing = "new"; formTarget = +c; formUnits = [n === "Lesen" ? "Seiten" : n === "Sport" ? "Minuten" : "", ""]; render(); $("fName").value = n; $("fName").focus();
+  } else if (t.id === "addBtn") {
+    editing = "new"; formTarget = 3; formUnits = ["", ""]; amtOpen = null; render({ focus: "fName" });
+  } else if (t.id === "exportBtn") doExport();
+  else if (t.id === "importBtn") showImport();
+  else if (t.dataset.copy !== undefined) copyBackup();
+  else if (t.dataset.pick !== undefined) $("fileIn").click();
+  else if (t.dataset.pasteok !== undefined) importText($("pasteIn").value);
+  else if (t.dataset.importok !== undefined) applyImport();
+  else if (t.dataset.closebk !== undefined) { pendingImport = null; $("backupSlot").innerHTML = ""; }
+});
+
+document.addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.dataset.amt) {
+    const h = state.habits.find(x => x.id === f.dataset.amt);
+    if (!h || !amtOpen) return;
+    if (!(h.units || []).some(Boolean)) {
+      // Erste Menge für dieses Ziel: Einheit(en) aus dem Feld übernehmen
+      const v0 = parseAmount($("amt0").value), v1 = parseAmount($("amt1").value);
+      const units = [];
+      if (v0 != null) units.push($("amtU0").value.trim() || "Menge");
+      if (v0 != null && v1 != null) units.push($("amtU1").value.trim() || "Menge 2");
+      if (!units.length) { amtOpen = null; render(); return; }
+      h.units = units;
+    }
+    const vals = (h.units || []).filter(Boolean).map((_, k) => parseAmount(($("amt" + k) || {}).value || ""));
+    setAmount(h, amtOpen.date, vals);
+    amtOpen = null; commit(); render();
+    return;
+  }
+  if (f.id !== "habitForm") return;
+  const units = [$("fUnit0").value.trim(), $("fUnit1").value.trim()].filter(Boolean);
+  const name = $("fName").value.trim();
+  if (!name) { $("fName").focus(); toast("Gib dem Ziel einen Namen"); return; }
+  const wk = weekKey(appNow());
+  if (f.dataset.id === "new") {
+    state.habits.push({ id: Math.random().toString(36).slice(2, 10), name, startWeek: wk, targets: { [wk]: formTarget }, weeks: {}, units });
+  } else {
+    const h = state.habits.find(x => x.id === f.dataset.id);
+    h.name = name;
+    h.units = units;
+    if (targetFor(h, wk) !== formTarget) h.targets[wk] = formTarget;
+  }
+  editing = null; commit(); render();
+});
+
+/* ---------- Backup ---------- */
+function backupJson() { return JSON.stringify({ app: "streak", exportedAt: new Date().toISOString(), ...state }, null, 1); }
+async function doExport() {
+  const dl = window.claude?.use ? await window.claude.use("downloads").catch(() => null) : null;
+  if (dl) {
+    try { await dl.save({ filename: `streak-backup-${ymd(new Date())}.json`, data: backupJson() }); toast("Backup gespeichert"); return; }
+    catch (err) { if (err && err.code === "declined") return; }
+  }
+  $("backupSlot").innerHTML = `<div class="panel"><h2>Backup</h2>
+    <div class="hint">Speichern als Datei geht hier nicht. Kopiere den Text und leg ihn z. B. in Notizen ab.</div>
+    <textarea id="bkOut" readonly>${esc(backupJson())}</textarea>
+    <div class="row"><button class="btn primary grow" data-copy>Kopieren</button><button class="btn" data-closebk>Schließen</button></div></div>`;
+}
+async function copyBackup() {
+  const ta = $("bkOut");
+  try { await navigator.clipboard.writeText(ta.value); toast("Kopiert"); }
+  catch { ta.focus(); ta.select(); toast("Text markiert, jetzt kopieren"); }
+}
+let pendingImport = null;
+function showImport() {
+  $("backupSlot").innerHTML = `<div class="panel"><h2>Backup laden</h2>
+    <div class="row"><button class="btn grow" data-pick>Datei wählen</button></div>
+    <label class="f" for="pasteIn">Oder Backup-Text einfügen<textarea id="pasteIn" placeholder='{"app":"streak", …}'></textarea></label>
+    <div class="row"><button class="btn primary grow" data-pasteok>Prüfen</button><button class="btn" data-closebk>Abbrechen</button></div>
+    <div id="importConfirm"></div></div>`;
+}
+$("fileIn").addEventListener("change", e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader(); r.onload = () => importText(String(r.result)); r.readAsText(file); e.target.value = "";
+});
+function importText(txt) {
+  let s; try { s = JSON.parse(txt); } catch { toast("Das ist kein gültiges Backup"); return; }
+  if (!validState(s)) { toast("Das ist kein gültiges Backup"); return; }
+  pendingImport = { v: 1, habits: s.habits, updatedAt: Date.now() };
+  $("importConfirm").innerHTML = `<div class="hint" style="margin-bottom:8px">${s.habits.length} ${s.habits.length === 1 ? "Ziel" : "Ziele"} gefunden. Laden ersetzt alles, was gerade in der App ist.</div>
+    <button class="btn primary" data-importok>Ersetzen und laden</button>`;
+}
+function applyImport() {
+  if (!pendingImport) return;
+  state = pendingImport; pendingImport = null; lastStreaks = {}; editing = null;
+  $("backupSlot").innerHTML = ""; commit(); render(); toast("Backup geladen");
+}
+
+/* ---------- Speicher ---------- */
+let docRef = null, saving = false, dirty = false, saveTimer = null, mode = "local";
+function setStore(text) { $("storeState").textContent = text; }
+function commit() {
+  state.updatedAt = Date.now();
+  lsWrite();
+  if (docRef) { dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(flush, 400); }
+}
+async function flush() {
+  if (!docRef || saving) return;
+  saving = true; dirty = false;
+  const body = JSON.parse(JSON.stringify(state));
+  try { await docRef.set(body); setStore("Gespeichert in deinem Claude-Konto"); }
+  catch (err) {
+    if (err && err.code === "unavailable") { dirty = true; setTimeout(flush, 1500 + Math.random() * 1000); }
+    else { docRef = null; mode = "local"; setStore("Nur auf diesem Gerät gespeichert. Mach regelmäßig ein Backup."); }
+  } finally { saving = false; if (dirty && docRef) flush(); }
+}
+function adopt(s) {
+  if (!validState(s)) return false;
+  // Daten aus dem Speicher sind eingefroren: tief kopieren, sonst lassen sich keine Tage mehr abhaken.
+  const copy = JSON.parse(JSON.stringify(s));
+  state = { v: 1, habits: copy.habits, updatedAt: copy.updatedAt || 0 }; lsWrite(); return true;
+}
+async function initStore() {
+  if (!window.claude?.use) { setStore("Nur auf diesem Gerät gespeichert. Mach regelmäßig ein Backup."); return; }
+  const [db, user] = await Promise.all([window.claude.use("db").catch(() => null), window.claude.use("user").catch(() => null)]);
+  const uid = user ? await user.id().catch(() => null) : null;
+  if (!db || !uid) { setStore("Nur auf diesem Gerät gespeichert. Mach regelmäßig ein Backup."); return; }
+  const ref = db.doc("data/users/" + uid + "/streak");
+  try {
+    const snap = await ref.get();
+    docRef = ref; mode = "cloud";
+    const remote = snap.exists ? snap.data() : null;
+    if (remote && validState(remote) && (remote.updatedAt || 0) >= (state.updatedAt || 0)) { adopt(remote); render(); setStore("Gespeichert in deinem Claude-Konto"); }
+    else if (state.habits.length || remote) { dirty = true; flush(); }
+    else setStore("Gespeichert in deinem Claude-Konto");
+    ref.onSnapshot(s => {
+      if (!s.exists || s.metadata.hasPendingWrites || dirty || saving) return;
+      const d = s.data();
+      if ((d.updatedAt || 0) > (state.updatedAt || 0) && adopt(d)) render();
+    }, () => {});
+  } catch {
+    setStore("Nur auf diesem Gerät gespeichert. Mach regelmäßig ein Backup.");
+  }
+}
+
+/* ---------- Start ---------- */
+const cached = lsRead();
+if (cached) state = cached;
+render();
+for (const h of state.habits) lastStreaks[h.id] = derive(h, appNow()).streak;
+initStore();
+// Wochenwechsel, während die App offen ist
+let lastDay = ymd(appNow());
+function refreshIfNewDay() { const d = ymd(appNow()); if (d !== lastDay) { lastDay = d; render(); } }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshIfNewDay(); });
+function tick() {
+  const a = appNow();
+  const end = new Date(a.getFullYear(), a.getMonth(), a.getDate() + 1, GRACE_HOURS, 0, 0);
+  const mins = Math.max(0, Math.ceil((end - Date.now()) / 60000));
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const left = h ? `${h} h ${pad(m)} min` : `${m} min`;
+  $("countdown").textContent = (dayIdx(a) === 6 ? "Woche endet in " : "Tag endet in ") + left;
+  refreshIfNewDay();
+}
+tick();
+setInterval(tick, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+</script>
+</body>
+</html>
