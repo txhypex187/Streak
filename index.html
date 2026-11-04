@@ -1,20 +1,10 @@
-<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Streak</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Streak">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
-</head>
-<body>
 <style>
 /* Layout: one narrow column, a card per habit, the week as seven tappable days. */
 :root {
@@ -47,7 +37,6 @@
   --warn: #f0b83a; --warn-soft: #33290f; --ok: #3ccf7f; color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; }
 [hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px;
@@ -94,7 +83,7 @@ header { display: flex; align-items: flex-end; justify-content: space-between; g
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .day { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; }
 .day .dn { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .03em; }
-.dot { width: 100%; max-width: 46px; aspect-ratio: 1; border-radius: 50%; background: var(--day); display: grid; place-items: center; position: relative; transition: background .18s, transform .18s; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; color: var(--muted); }
+.dot { width: 100%; max-width: 46px; aspect-ratio: 1; border-radius: 10px; background: var(--day); display: grid; place-items: center; position: relative; transition: background .18s, transform .18s; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; color: var(--muted); }
 .day.today .dot { box-shadow: 0 0 0 2px var(--fg) inset; color: var(--fg); }
 .day.on .dot { background: var(--accent); color: var(--on-accent); box-shadow: none; }
 .day.on .dot .d { opacity: 0; }
@@ -127,7 +116,7 @@ header { display: flex; align-items: flex-end; justify-content: space-between; g
 .legend .sq { width: 10px; border-radius: 3px; }
 .pauserow { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-top: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
 .btn.small { padding: 8px 12px; font-size: 14px; font-weight: 500; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--day); border-radius: 12px; padding: 3px; gap: 3px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--day); border-radius: 12px; padding: 3px; gap: 3px; }
 .tabs button { padding: 8px 0; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--muted); }
 .tabs button[aria-selected=true] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 #statsView { display: flex; flex-direction: column; gap: 14px; }
@@ -159,6 +148,36 @@ header { display: flex; align-items: flex-end; justify-content: space-between; g
 .bcol.cur .bfill { opacity: .5; }
 .tline { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--fg); opacity: .5; z-index: 1; }
 .bkw { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.lc { width: 100%; height: auto; display: block; }
+.lc-g { stroke: var(--line); stroke-width: 1; }
+.lc-ax { stroke: var(--line); stroke-width: 1.5; }
+.lc-t { fill: var(--muted); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lc-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.lc-tg { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .7; }
+.lc-m { fill: var(--card); stroke: var(--accent); stroke-width: 2.5; }
+.lc-c { fill: var(--accent); }
+.lc-h { fill: var(--accent); opacity: .2; }
+.lc-v { fill: var(--accent); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lc-st1 { stop-color: var(--accent); stop-opacity: .35; }
+.lc-st2 { stop-color: var(--accent); stop-opacity: 0; }
+.lc-hit { fill: transparent; cursor: pointer; }
+.seg.mini { margin-left: auto; width: 112px; padding: 2px; gap: 2px; }
+.seg.mini button { padding: 3px 0; font-size: 11px; text-transform: none; letter-spacing: 0; }
+.lc-pop { pointer-events: none; }
+.lc-pop rect { fill: var(--fg); }
+.lc-pop text { fill: var(--bg); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Statistik kompakt */
+#statsView { gap: 10px; }
+.card.stat { padding: 12px 14px; gap: 10px; }
+.card.stat .fig b { font-size: 18px; }
+.card.stat .fig span { font-size: 11px; color: var(--muted); }
+.card.stat .sub { font-size: 11px; }
+.card.stat .wtrack { height: 26px; }
+.card.stat .wds { gap: 4px; }
+.card.stat .units { gap: 4px; }
+.card.stat .urow { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card.stat .urow b { font-size: 14px; }
+.card.stat .urow span { font-size: 12px; }
 .wds { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .wd { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .wtrack { width: 100%; max-width: 26px; height: 44px; background: var(--day); border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
@@ -198,6 +217,43 @@ footer { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; max-width: calc(100% - 32px); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Verlauf: Monats- und Jahresansicht */
+#histView { display: flex; flex-direction: column; gap: 14px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--day); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { padding: 6px 0; border-radius: 8px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.seg button[aria-pressed=true] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.hnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--font-display); font-size: 18px; min-height: 36px; }
+.hnav button { width: 36px; height: 36px; border-radius: 10px; background: var(--card); font-size: 20px; line-height: 1; }
+.hnav button:disabled { opacity: .3; cursor: default; }
+.hstats { display: flex; gap: 12px; align-items: center; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hn { color: var(--ok); }
+.hs { display: inline-flex; align-items: center; gap: 3px; color: var(--hc); }
+.hs svg { width: 14px; height: 14px; fill: currentColor; }
+.hdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); }
+.hmonth { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.hc { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border-radius: 7px; background: var(--day); font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hc.blank { background: none; }
+.hc.on { background: var(--hc); color: #fff; }
+.hc.pre { opacity: .4; }
+.hc.fut { opacity: .35; }
+.hc.today { box-shadow: 0 0 0 2px var(--fg) inset; }
+.hc.today.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--fg); }
+.hscroll { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.hylab, .hyear { display: grid; grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; width: max-content; }
+.hylab { height: 14px; margin-bottom: 4px; font-size: 10px; color: var(--muted); font-weight: 600; }
+.hylab span { white-space: nowrap; }
+.hyear { grid-template-rows: repeat(7, 12px); }
+.hyear .hc { aspect-ratio: auto; border-radius: 3px; font-size: 0; }
+.hyear .hc.today { box-shadow: 0 0 0 1.5px var(--fg) inset; }
+.hyear .hc.today.on { box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px var(--fg); }
+.hyr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 12px; }
+.hm b { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.hm > div { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.hm .hc { border-radius: 4px; font-size: 0; }
+.hc.part { background: var(--hc); opacity: .4; }
+@supports (background: color-mix(in srgb, red, blue)) { .hc.part { background: color-mix(in srgb, var(--hc) 40%, var(--day)); opacity: 1; } }
+.hc.pause { background: none; box-shadow: 0 0 0 1.5px var(--line) inset; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -206,6 +262,7 @@ footer { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
 <div class="wrap">
   <nav class="tabs" role="tablist">
     <button role="tab" id="tabWeek" data-view="week" aria-selected="true">Woche</button>
+    <button role="tab" id="tabHist" data-view="hist" aria-selected="false">Verlauf</button>
     <button role="tab" id="tabStats" data-view="stats" aria-selected="false">Statistik</button>
   </nav>
   <div id="weekView" style="display:flex;flex-direction:column;gap:14px">
@@ -224,6 +281,7 @@ footer { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
   <button class="add" id="addBtn">+ Neues Ziel</button>
   </div>
   <div id="statsView" hidden></div>
+  <div id="histView" hidden></div>
 
   <footer>
     <div class="links">
@@ -400,6 +458,13 @@ function render(opts = {}) {
   $("tabStats").setAttribute("aria-selected", String(view === "stats"));
   $("weekView").hidden = view !== "week";
   $("statsView").hidden = view !== "stats";
+  $("histView").hidden = view !== "hist";
+  $("tabHist").setAttribute("aria-selected", String(view === "hist"));
+  if (view === "hist") {
+    $("histView").innerHTML = histViewHtml(today);
+    $("histView").querySelectorAll(".hscroll").forEach(el => { el.scrollLeft = el.scrollWidth; });
+    return;
+  }
   if (view === "stats") { $("statsView").innerHTML = statsHtml(today); return; }
   $("wkLabel").textContent = "KW " + isoWeek(today);
   $("wkRange").textContent = mon.getMonth() === sun.getMonth()
@@ -470,7 +535,7 @@ function cardHtml(h, d, today, mon) {
         <label class="f" for="amtU1">Einheit<input type="text" id="amtU1" maxlength="20" placeholder="z. B. km" autocomplete="off"></label></div>`;
     editor = `<form class="amtform" data-amt="${h.id}">
       ${fields}
-      <div class="row"><button type="submit" class="btn primary grow">Speichern</button><button type="button" class="btn" data-amtclose>${amtOpen.fresh ? "Nur abhaken" : "Schließen"}</button></div>
+      <div class="row"><button type="button" data-save class="btn primary grow">Speichern</button><button type="button" class="btn" data-amtclose>${amtOpen.fresh ? "Nur abhaken" : "Schließen"}</button></div>
       <button type="button" class="btn remove" data-amtremove="${h.id}">${DAYNAMES[dayIdx(dd)]} ${dd.getDate()}. wieder entfernen</button>
     </form>`;
   }
@@ -507,70 +572,103 @@ const shortDate = ds => { const d = parseYmd(ds); return `${DAYNAMES[dayIdx(d)]}
 function statsHtml(today) {
   if (!state.habits.length) return `<div class="panel empty"><h2>Statistik</h2><p>Lege zuerst ein Ziel an. Hier siehst du dann, wie es läuft.</p></div>`;
   const cards = state.habits.map(h => statCard(h, stats(h, today))).join("");
-  return `<header><div><div class="wk-label">Seit Beginn</div><div class="wk-range">Statistik</div></div></header>${cards}`;
+  return cards;
 }
+/* ---------- Liniendiagramm (Statistik) ---------- */
+function chartTop(maxV, useUnit) {
+  if (!useUnit) return Math.max(2, Math.ceil(maxV / 2) * 2);
+  if (maxV <= 0) return 2;
+  const exp = Math.pow(10, Math.floor(Math.log10(maxV)));
+  for (const f of [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (f * exp >= maxV * 1.05) return f * exp;
+  return 10 * exp;
+}
+function lineChart(id, labels, tips, vals, tgts, top, yTicks, valText) {
+  const W = 320, L = 34, R = 18, T = 26, B = 94;
+  const n = vals.length;
+  const xs = vals.map((_, i) => n === 1 ? (L + W - R) / 2 : L + i * (W - R - L) / (n - 1));
+  const y = v => B - Math.min(v, top) / top * (B - T);
+  const f1 = v => v.toFixed(1);
+  const pts = vals.map((v, i) => [xs[i], y(v)]);
+  const line = pts.map((p, i) => (i ? "L" : "M") + f1(p[0]) + " " + f1(p[1])).join(" ");
+  const area = n > 1 ? `<path d="${line} L${f1(xs[n - 1])} ${B} L${f1(xs[0])} ${B} Z" fill="url(#${id})"/>` : "";
+  const grid = xs.map(x => `<line class="lc-g" x1="${f1(x)}" y1="${T - 6}" x2="${f1(x)}" y2="${B}"/>`).join("");
+  const yl = yTicks.map(([v, txt]) => `<text class="lc-t" x="${L - 8}" y="${f1(y(v))}" text-anchor="end" dy=".35em">${esc(txt)}</text>`).join("");
+  const xl = labels.map((txt, i) => `<text class="lc-t" x="${f1(xs[i])}" y="${B + 16}" text-anchor="middle">${esc(txt)}</text>`).join("");
+  const tl = tgts && n > 1 ? `<path class="lc-tg" d="${tgts.map((t, i) => (i ? "L" : "M") + f1(xs[i]) + " " + f1(y(t))).join(" ")}"/>` : "";
+  const marks = pts.map((p, i) => i === n - 1
+    ? `<circle class="lc-h" cx="${f1(p[0])}" cy="${f1(p[1])}" r="11"/><circle class="lc-c" cx="${f1(p[0])}" cy="${f1(p[1])}" r="5.5"/>`
+    : `<circle class="lc-m" cx="${f1(p[0])}" cy="${f1(p[1])}" r="${n > 10 ? 3.5 : 4.5}"/>`).join("");
+  // Unsichtbare, größere Tippflächen: zeigen beim Antippen die Zahl
+  const hits = pts.map((p, i) =>
+    `<circle class="lc-hit" cx="${f1(p[0])}" cy="${f1(p[1])}" r="${n > 10 ? 10 : 14}" data-k="${id}:${i}" data-x="${f1(p[0])}" data-y="${f1(p[1])}" data-t="${esc(tips[i])}"/>`).join("");
+  return `<svg class="lc" viewBox="0 0 ${W} 116" role="img" aria-label="Verlauf">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="lc-st1"/><stop offset="1" class="lc-st2"/></linearGradient></defs>
+    ${grid}<line class="lc-ax" x1="${L - 2}" y1="${B}" x2="${W - R + 6}" y2="${B}"/>${yl}${xl}${area}${tl}
+    ${n > 1 ? `<path class="lc-line" d="${line}"/>` : ""}${marks}
+    <text class="lc-v" x="${W - R}" y="11" text-anchor="end">${esc(valText)}</text>${hits}</svg>`;
+}
+
 function statCard(h, st) {
   const d = st.d;
   const quote = st.counted ? `${st.okWeeks} von ${st.counted}` : "–";
-  const quotePct = st.counted ? `${Math.round(st.okWeeks / st.counted * 100)} %` : "noch keine fertige Woche";
   const avg = st.avgDays != null ? fmt(st.avgDays) : "–";
   const figs = `<div class="figs">
-    <div class="fig"><b>${quote}</b><span>Wochen geschafft</span><small>${quotePct}</small></div>
-    <div class="fig"><b>${avg}</b><span>Tage pro Woche</span><small>Ziel ${fmt(st.avgTarget)}</small></div>
-    <div class="fig"><b>${d.best}</b><span>beste Streak</span><small>${d.total} Einträge${d.bonusTotal ? `, +${d.bonusTotal} Bonus` : ""}</small></div>
+    <div class="fig"><b>${quote}</b><span>Wochen geschafft</span></div>
+    <div class="fig"><b>${avg}</b><span>Tage pro Woche</span></div>
+    <div class="fig"><b>${d.best}</b><span>beste Streak</span></div>
   </div>`;
 
-  // Balken: letzte 8 Wochen (Menge der 1. Einheit, sonst Tage)
+  // Verlauf als Liniendiagramm: Tage (letzte 14) oder Wochen (letzte 8)
   const useUnit = st.units.length > 0;
-  const vals = st.last8.map(x => useUnit ? x.sums[0] : x.c);
-  const max = Math.max(1, ...vals, ...(useUnit ? [] : st.last8.map(x => x.t))) * 1.12;
-  const bars = st.last8.map((x, i) => {
-    const v = vals[i], hgt = Math.round(v / max * 100);
-    const tl = useUnit ? "" : `<i class="tline" style="bottom:${Math.round(x.t / max * 100)}%"></i>`;
-    return `<div class="bcol${x.current ? " cur" : ""}"><span class="bval">${v ? fmt(v) : ""}</span>
-      <div class="btrack">${tl}<i class="bfill${!useUnit && x.c >= x.t ? " met" : ""}" style="height:${hgt}%"></i></div>
-      <span class="bkw">${x.current ? "jetzt" : "KW " + isoWeek(parseYmd(x.wk))}</span></div>`;
-  }).join("");
-  const chart = `<div class="sub">${useUnit ? esc(st.units[0]) + " pro Woche" : "Tage pro Woche"}${useUnit ? "" : ` <span class="leg"><i class="tline-l"></i>Ziel</span>`}</div><div class="bars">${bars}</div>`;
+  const uName = useUnit ? st.units[0] : "";
+  let labels, tips, vals, tgts = null, top, yTicks, valText, title, legend = "";
+  if (sMode === "day") {
+    const today = appNow(), tStr = ymd(today), days = [];
+    for (let k = 13; k >= 0; k--) { const dt = addDays(today, -k), ds = ymd(dt); if (ds >= h.startWeek) days.push([dt, ds]); }
+    vals = days.map(([dt, ds]) => { if (!useUnit) return dayOn(h, dt) ? 1 : 0; const a = getAmount(h, ds); return a && a[0] ? a[0] : 0; });
+    labels = days.map(([dt, ds]) => ds === tStr ? "heute" : String(dt.getDate()));
+    tips = days.map(([dt], i) => {
+      const nm = `${DAYNAMES[dayIdx(dt)]} ${dt.getDate()}. ${MONTHS[dt.getMonth()].slice(0, 3)}`;
+      if (!useUnit) return `${nm} · ${vals[i] ? "geschafft" : "nicht geschafft"}`;
+      return `${nm} · ${vals[i] ? fmt(vals[i]) + " " + uName : dayOn(h, dt) ? "abgehakt, keine Menge" : "nichts eingetragen"}`;
+    });
+    top = useUnit ? chartTop(Math.max(0, ...vals), true) : 1;
+    yTicks = useUnit ? [0, top / 2, top].map(v => [v, fmt(v)]) : [[0, "0"], [1, "1"]];
+    const lv = vals[vals.length - 1] || 0;
+    valText = useUnit ? `heute ${fmt(lv)} ${uName}` : (lv ? "heute geschafft" : "heute offen");
+    title = useUnit ? `${esc(uName)} pro Tag` : "Letzte 14 Tage";
+  } else {
+    vals = st.last8.map(x => useUnit ? x.sums[0] : x.c);
+    tgts = useUnit ? null : st.last8.map(x => x.t);
+    const kw = x => "KW " + isoWeek(parseYmd(x.wk));
+    labels = st.last8.map(x => x.current ? "jetzt" : kw(x));
+    tips = st.last8.map((x, i) => `${x.current ? "Diese Woche" : kw(x)} · ${useUnit ? `${fmt(vals[i])} ${uName}` : `${fmt(vals[i])} von ${x.t} Tagen`}`);
+    top = chartTop(Math.max(0, ...vals, ...(tgts || [])), useUnit);
+    yTicks = [0, top / 2, top].map(v => [v, fmt(v)]);
+    const lv = vals[vals.length - 1] || 0;
+    valText = useUnit ? `${fmt(lv)} ${uName}` : `${fmt(lv)} ${lv === 1 ? "Tag" : "Tage"}`;
+    title = useUnit ? `${esc(uName)} pro Woche` : "Tage pro Woche";
+    if (!useUnit) legend = ` <span class="leg"><i class="tline-l"></i>Ziel</span>`;
+  }
+  const seg = `<div class="seg mini"><button data-smode="day" aria-pressed="${sMode === "day"}">Tage</button><button data-smode="week" aria-pressed="${sMode === "week"}">Wochen</button></div>`;
+  const chart = `<div class="sub">${title}${legend}${seg}</div>${lineChart("lc-" + h.id, labels, tips, vals, tgts, top, yTicks, valText)}`;
 
   // Wochentage
-  const wmax = Math.max(1, ...st.weekday), wsum = st.weekday.reduce((a, b) => a + b, 0);
+  const wmax = Math.max(1, ...st.weekday);
   const wd = st.weekday.map((v, i) => `<div class="wd"><div class="wtrack"><i style="height:${Math.round(v / wmax * 100)}%"></i></div><span>${DAYNAMES[i]}</span></div>`).join("");
-  let wdText = "";
-  if (wsum >= 6) {
-    const hi = st.weekday.indexOf(Math.max(...st.weekday)), lo = st.weekday.indexOf(Math.min(...st.weekday));
-    if (st.weekday[hi] !== st.weekday[lo]) wdText = `<div class="hint">Am häufigsten am ${DAYLONG[hi]}, am seltensten am ${DAYLONG[lo]}.</div>`;
-  }
-  const weekdays = `<div class="sub">Wochentage</div><div class="wds">${wd}</div>${wdText}`;
+  const weekdays = `<div class="sub">Wochentage</div><div class="wds">${wd}</div>`;
 
-  // Mengen
-  const unitRows = st.unitStats.map(u => {
-    if (!u.n) return `<div class="urow"><b>${esc(u.name)}</b><span class="hint">Noch keine Zahlen eingetragen. Tipp einen abgehakten Tag an, um eine einzutragen.</span></div>`;
-    let cmp = "";
-    cmp = `Diese Woche bisher ${fmt(u.thisWeek)}${u.avgWeek ? ` · Schnitt pro Woche ${fmt(u.avgWeek)}` : ""}`;
-    return `<div class="urow"><b>${fmt(u.total)} ${esc(u.name)}</b><span>Ø ${fmt(u.avg)} pro Eintrag · Rekord ${fmt(u.rec.v)} am ${shortDate(u.rec.date)}</span><span>${cmp}</span></div>`;
-  }).join("");
+  // Mengen (eine Zeile pro Einheit)
+  const unitRows = st.unitStats.filter(u => u.n).map(u =>
+    `<div class="urow"><b>${fmt(u.total)} ${esc(u.name)}</b><span>Ø ${fmt(u.avg)} · Rekord ${fmt(u.rec.v)}</span></div>`).join("");
 
-  // Erkenntnisse
-  const notes = [];
-  if (st.trend && st.trend.pct != null && Math.abs(st.trend.pct) >= 5)
-    notes.push(`Letzte 4 Wochen ${st.trend.pct > 0 ? "↑" : "↓"} ${Math.abs(Math.round(st.trend.pct))} % gegenüber den 4 davor.`);
-  else if (st.trend) notes.push("Letzte 4 Wochen etwa gleich wie die 4 davor.");
-  if (st.avgDays != null && st.pastWeeks >= 4) {
-    if (st.avgDays >= st.avgTarget + 1) notes.push("Du liegst klar über deinem Minimum. Ein höheres Ziel wäre machbar.");
-    else if (st.avgDays < st.avgTarget - 0.5) notes.push("Du liegst im Schnitt unter deinem Minimum. Ein kleineres Ziel könnte die Streak retten.");
-  }
-  if (st.tipping != null) notes.push(`Verwarnungen kamen bisher meist nach ${st.tipping} ${st.tipping === 1 ? "Woche" : "Wochen"} Streak.`);
-  if (st.pastWeeks < 6) notes.push(`Noch wenig Daten (${st.pastWeeks} ${st.pastWeeks === 1 ? "fertige Woche" : "fertige Wochen"}). Aussagekräftig wird es nach 6 bis 8 Wochen.`);
-
-  return `<section class="card">
+  return `<section class="card stat">
     <div class="top"><div class="name" style="padding:0">${esc(h.name)}</div>
-      <div class="streak${d.streak > 0 ? " on" : ""}">${FLAME}<span class="num" style="font-size:24px">${d.streak}</span></div></div>
+      <div class="streak${d.streak > 0 ? " on" : ""}">${FLAME}<span class="num" style="font-size:20px">${d.streak}</span></div></div>
     ${figs}
     ${unitRows ? `<div class="units">${unitRows}</div>` : ""}
     ${chart}
     ${weekdays}
-    ${notes.length ? `<div class="notes">${notes.map(n => `<p>${n}</p>`).join("")}</div>` : ""}
   </section>`;
 }
 
@@ -586,6 +684,74 @@ function histHtml(hist) {
     .map(s => `<span><i class="sq ${s}"></i>${ST_LABEL[s]}</span>`).join("");
   return `<div class="hist"><div class="hrow">${cells}</div>${legend ? `<div class="legend">${legend}</div>` : ""}
     ${last.length < 2 ? `<div class="hint">Der Verlauf füllt sich mit jeder abgeschlossenen Woche.</div>` : ""}</div>`;
+}
+
+/* ---------- Verlauf: Monats- und Jahresansicht ---------- */
+const HCOLORS = ["#ff5a1f", "#f5a623", "#6c5ce7", "#19b5e5", "#1f9d55", "#e84393"];
+let sMode = "week"; // Statistik-Diagramm: "day" oder "week"
+let hMode = "month", hOff = 0, hYOff = 0; // hOff / hYOff: Monate bzw. Jahre zurück (0 = aktuell)
+function dayOn(h, d) { return !!((h.weeks[weekKey(d)] || 0) & (1 << dayIdx(d))); }
+function histViewHtml(today) {
+  if (!state.habits.length) return `<div class="panel empty"><h2>Noch nichts zu sehen</h2><p>Lege zuerst ein Ziel an. Dann siehst du hier jeden Tag als Kästchen.</p></div>`;
+  const tStr = ymd(today);
+  const earliest = state.habits.reduce((m, h) => h.startWeek < m ? h.startWeek : m, state.habits[0].startWeek);
+  const ed = parseYmd(earliest);
+  const minOff = Math.min(0, (ed.getFullYear() - today.getFullYear()) * 12 + ed.getMonth() - today.getMonth());
+  hOff = Math.max(minOff, Math.min(0, hOff));
+  const minY = Math.min(0, ed.getFullYear() - today.getFullYear());
+  hYOff = Math.max(minY, Math.min(0, hYOff));
+  const seg = `<div class="seg"><button data-hmode="month" aria-pressed="${hMode === "month"}">Monat</button><button data-hmode="year" aria-pressed="${hMode === "year"}">Jahr</button></div>`;
+  let nav, from, to, year;
+  if (hMode === "month") {
+    from = new Date(today.getFullYear(), today.getMonth() + hOff, 1);
+    to = new Date(from.getFullYear(), from.getMonth() + 1, 0);
+    nav = `<div class="hnav"><button data-hnav="-1" aria-label="Vorheriger Monat"${hOff <= minOff ? " disabled" : ""}>‹</button><b>${MONTHS[from.getMonth()]} ${from.getFullYear()}</b><button data-hnav="1" aria-label="Nächster Monat"${hOff >= 0 ? " disabled" : ""}>›</button></div>`;
+  } else {
+    year = today.getFullYear() + hYOff;
+    nav = `<div class="hnav"><button data-hnav="-1" aria-label="Vorheriges Jahr"${hYOff <= minY ? " disabled" : ""}>‹</button><b>${year}</b><button data-hnav="1" aria-label="Nächstes Jahr"${hYOff >= 0 ? " disabled" : ""}>›</button></div>`;
+  }
+  const cards = state.habits.map((h, i) => {
+    const d = derive(h, today);
+    const cls = (dt, ds, on) => `hc${on ? " on" : ""}${ds > tStr ? " fut" : ""}${ds < h.startWeek ? " pre" : ""}${ds === tStr ? " today" : ""}`;
+    let n = 0, grid = "";
+    if (hMode === "month") {
+      let cells = "";
+      for (let k = 0; k < dayIdx(from); k++) cells += `<i class="hc blank"></i>`;
+      for (let day = 1; day <= to.getDate(); day++) {
+        const dt = new Date(from.getFullYear(), from.getMonth(), day), ds = ymd(dt), on = dayOn(h, dt);
+        if (on) n++;
+        cells += `<i class="${cls(dt, ds, on)}">${day}</i>`;
+      }
+      grid = `<div class="hdays">${DAYNAMES.map(x => `<span>${x}</span>`).join("")}</div><div class="hmonth">${cells}</div>`;
+    } else {
+      // Jahresansicht: Januar bis Dezember, darunter je eine Kachel pro Woche
+      // (voll = Ziel geschafft, hell = angefangen). Eine Woche zählt zu dem Monat, in dem ihr Donnerstag liegt.
+      const byWk = {};
+      d.history.forEach(x => { byWk[x.wk] = x; });
+      const curWk = weekKey(today);
+      const perMonth = Array.from({ length: 12 }, () => "");
+      let m = mondayOf(new Date(year, 0, 1));
+      if (addDays(m, 3).getFullYear() !== year) m = addDays(m, 7);
+      while (addDays(m, 3).getFullYear() === year) {
+        const wk = ymd(m), x = byWk[wk], mi = addDays(m, 3).getMonth();
+        let c = "", tip = "";
+        if (x) {
+          c = x.st === "ok" ? "on" : x.st === "pause" ? "pause" : x.c > 0 ? "part" : "";
+          if (x.st === "ok") n++;
+          tip = ` title="KW ${isoWeek(m)}: ${x.c} von ${x.t} Tagen"`;
+        } else if (wk < h.startWeek) c = "pre";
+        else if (wk > curWk) c = "fut";
+        perMonth[mi] += `<i class="hc${c ? " " + c : ""}${wk === curWk ? " today" : ""}"${tip}></i>`;
+        m = addDays(m, 7);
+      }
+      grid = `<div class="hyr">${perMonth.map((cells, mi) => `<div class="hm"><b>${MONTHS[mi].slice(0, 3)}</b><div>${cells}</div></div>`).join("")}</div>`;
+    }
+    return `<section class="card" style="--hc:${HCOLORS[i % HCOLORS.length]}">
+      <div class="top"><div class="name" style="padding:0">${esc(h.name)}</div>
+        <div class="hstats"><span class="hn">${n} ${hMode === "year" ? (n === 1 ? "Woche" : "Wochen") : (n === 1 ? "Tag" : "Tage")} ✓</span><span class="hs">${FLAME}${d.streak}</span></div></div>${grid}</section>`;
+  }).join("");
+  const legend = hMode === "year" ? `<div class="hint">Jede Kachel ist eine Woche, einem Monat nach ihrem Donnerstag zugeordnet. Voll: Ziel geschafft, hell: angefangen, leer: nichts eingetragen.</div>` : "";
+  return seg + nav + cards + legend;
 }
 
 function formHtml(h) {
@@ -606,7 +772,7 @@ function formHtml(h) {
       <button type="button" class="btn small" data-pause="${h.id}">${p ? "Pause beenden" : "Diese Woche pausieren"}</button>
       <span class="hint">Eine pausierte Woche zählt nicht als verpasst. Schaffst du das Ziel trotzdem, zählt sie normal.</span></div>`; })()}
     <div class="row">
-      <button type="submit" class="btn primary grow">${isNew ? "Anlegen" : "Speichern"}</button>
+      <button type="button" data-save class="btn primary grow">${isNew ? "Anlegen" : "Speichern"}</button>
       <button type="button" class="btn" data-cancel>Abbrechen</button>
     </div>
     ${isNew ? "" : `<div class="row" id="delRow"><button type="button" class="btn danger" data-del="${h.id}">Ziel löschen</button></div>`}
@@ -638,8 +804,17 @@ document.addEventListener("click", e => {
   if (!t) return;
   haptic();
   const today = appNow();
-  if (t.dataset.view) {
+  if (t.dataset.save !== undefined) {
+    submitForm(t.closest("form"));
+  } else if (t.dataset.view) {
     view = t.dataset.view; editing = null; amtOpen = null; render(); window.scrollTo(0, 0);
+  } else if (t.dataset.smode) {
+    sMode = t.dataset.smode; render();
+  } else if (t.dataset.hmode) {
+    hMode = t.dataset.hmode; render();
+  } else if (t.dataset.hnav) {
+    if (hMode === "year") hYOff = Math.min(0, hYOff + +t.dataset.hnav); else hOff = Math.min(0, hOff + +t.dataset.hnav);
+    render();
   } else if (t.dataset.day) {
     const h = state.habits.find(x => x.id === t.dataset.h);
     if (!h) return;
@@ -705,9 +880,36 @@ document.addEventListener("click", e => {
   else if (t.dataset.closebk !== undefined) { pendingImport = null; $("backupSlot").innerHTML = ""; }
 });
 
-document.addEventListener("submit", e => {
-  e.preventDefault();
-  const f = e.target;
+/* Diagramm: Antippen eines Punktes zeigt die Zahl, nochmal antippen blendet sie aus */
+document.addEventListener("click", e => {
+  const hit = e.target.closest ? e.target.closest(".lc-hit") : null;
+  const prev = document.querySelector(".lc-pop");
+  const same = !!(hit && prev && prev.dataset.k === hit.dataset.k);
+  if (prev) prev.remove();
+  if (!hit || same) return;
+  const svg = hit.ownerSVGElement, NS = "http://www.w3.org/2000/svg";
+  const x = +hit.dataset.x, y = +hit.dataset.y, txt = hit.dataset.t;
+  const w = txt.length * 6.2 + 16, hgt = 22;
+  const rx = Math.max(2, Math.min(318 - w, x - w / 2));
+  const ry = y - hgt - 12 >= 0 ? y - hgt - 12 : y + 12;
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("class", "lc-pop"); g.dataset.k = hit.dataset.k;
+  const r = document.createElementNS(NS, "rect");
+  r.setAttribute("x", rx.toFixed(1)); r.setAttribute("y", ry.toFixed(1)); r.setAttribute("width", w.toFixed(1)); r.setAttribute("height", hgt); r.setAttribute("rx", 7);
+  const t = document.createElementNS(NS, "text");
+  t.setAttribute("x", (rx + w / 2).toFixed(1)); t.setAttribute("y", (ry + hgt / 2).toFixed(1)); t.setAttribute("text-anchor", "middle"); t.setAttribute("dy", ".35em");
+  t.textContent = txt;
+  g.appendChild(r); g.appendChild(t); svg.appendChild(g);
+});
+
+/* Formulare werden über Klick/Enter gespeichert, nicht über das submit-Ereignis:
+   In der eingebetteten Claude-Ansicht ist das Absenden von Formularen gesperrt. */
+document.addEventListener("submit", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.form) { e.preventDefault(); submitForm(e.target.form); }
+});
+function submitForm(f) {
+  if (!f) return;
   if (f.dataset.amt) {
     const h = state.habits.find(x => x.id === f.dataset.amt);
     if (!h || !amtOpen) return;
@@ -739,7 +941,7 @@ document.addEventListener("submit", e => {
     if (targetFor(h, wk) !== formTarget) h.targets[wk] = formTarget;
   }
   editing = null; commit(); render();
-});
+}
 
 /* ---------- Backup ---------- */
 function backupJson() { return JSON.stringify({ app: "streak", exportedAt: new Date().toISOString(), ...state }, null, 1); }
@@ -854,5 +1056,5 @@ tick();
 setInterval(tick, 20000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
 </script>
-</body>
-</html>
+
+</body></html>
